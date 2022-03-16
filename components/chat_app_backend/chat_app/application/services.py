@@ -1,0 +1,1 @@
+from classic.components import component

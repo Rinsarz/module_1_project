@@ -1,0 +1,29 @@
+@startuml
+
+header Chat
+title Диаграмма компонентов
+
+rectangle "Interfaces" {
+  [Chat API] as chat_api
+  [Database] as database
+}
+
+
+rectangle "Application" {
+  [Chat] as chat
+  interface "Chat repositories" as chat_repositories
+}
+
+database -u-- chat_repositories
+
+
+() "HTTP API" as http_api
+
+chat_api -u-( http_api
+chat <.. chat_api
+
+chat --( chat_repositories
+
+
+
+@enduml

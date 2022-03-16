@@ -1,0 +1,56 @@
+@startuml
+
+header Демо проект
+title Диаграмма прецедентов
+
+left to right direction
+
+
+
+rectangle "Auth" {
+  usecase "Authorization" as authorization
+  usecase "Registration" as registration
+}
+
+rectangle "Chats" {
+  usecase "Create Chat" as create_chat
+  usecase "Update Chat" as update_chat
+  usecase "Get chat info" as get_chat_info
+  usecase "Get Participants List" as get_participants_list
+  usecase "Add new participant" as add_new_participant
+  usecase "Remove participant" as remove_participant
+  usecase "Quit chat" as quit_chat
+  usecase "Send Message" as send_message
+  usecase "Get Messages" as get_messages
+  usecase "Return To Chat" as return_to_chat
+}
+
+
+actor "Guest" as guest
+guest -- authorization
+guest -- registration
+
+actor "User" as user
+user -- create_chat
+user -- return_to_chat
+
+actor "Chat Creator" as chat_creator
+chat_creator -- update_chat
+chat_creator -- add_new_participant
+chat_creator -- remove_participant
+
+actor "Chat Participant" as chat_participant
+chat_participant -- get_chat_info
+chat_participant -- get_participants_list
+chat_participant -- quit_chat
+chat_participant -- send_message
+chat_participant -- get_messages
+
+user <|-- chat_creator
+chat_participant <|-- chat_creator
+user <|-- chat_participant
+
+
+
+
+@enduml
