@@ -9,22 +9,26 @@ hide circle
 
 
 
-entity chat{
+entity chats{
     * **chat_id**: int
+    * **creator_id**: int FK
+    **info**: text
+
+
 }
 
-entity user{
+entity users{
     * **user_id**: int
     * **username**: text
     * **password**: text
     * **email**: text
 }
 
-entity chat_user{
+entity chat_users{
     * **chat_id**: int FK
     * **user_id**: int FK
     * **status_id**: int FK
-    * **changed**: text
+    * **changed**: datetime
 }
 
 entity messages{
@@ -41,12 +45,12 @@ entity statuses{
     * **status_name**: varchar
 
 }
-
-messages }o--|| user
-chat_user }o--|| user
-chat ||--o{ chat_user
-chat_user }o--||statuses
-messages}o--||chat
+chats }o--|| users
+messages }o--|| users
+chat_users }o--|| users
+chats ||--|{ chat_users
+chat_users }o--||statuses
+messages }o--||chats
 
 @enduml
 
