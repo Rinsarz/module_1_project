@@ -37,8 +37,8 @@ chat_user = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('chat_id', ForeignKey('chats.chat_id'), nullable=False),
     Column('user_id', ForeignKey('users.user_id'), nullable=False),
-    Column('status_id', ForeignKey('statuses.status_id'), nullable=False),
-    Column('changed', DateTime, nullable=False),
+    Column('status_id', String, nullable=True),
+    Column('changed', String, nullable=True),
     )
 
 chats = Table(

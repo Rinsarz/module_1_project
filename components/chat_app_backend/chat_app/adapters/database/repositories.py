@@ -17,6 +17,7 @@ class ChatsRepo(BaseRepository, interfaces.ChatsRepo):
     def add(self, chat: Chat):
         self.session.add(chat)
         self.session.flush()
+        self.session.commit()
 
     def delete(self, chat: Chat):
         self.session.delete(chat)
@@ -26,12 +27,14 @@ class MessagesRepo(BaseRepository, interfaces.MessagesRepo):
     def add(self, message: Message):
         self.session.add(message)
         self.session.flush()
+        self.session.commit()
 
 @component
 class UsersRepo(BaseRepository, interfaces.UsersRepo):
     def add(self, user: User):
         self.session.add(user)
         self.session.flush()
+        self.session.commit()
 
     def get_by_id(self, _id: int) -> User:
         query = select(User).where(User.user_id == _id)
@@ -42,3 +45,4 @@ class StatusesRepo(BaseRepository, interfaces.StatusesRepo):
     def add(self, status: Status):
         self.session.add(status)
         self.session.flush()
+

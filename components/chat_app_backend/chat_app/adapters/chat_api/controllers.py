@@ -16,23 +16,39 @@ class Chats:
 
     @join_point
     def on_get_show_messages(self, request: Request, response: Response):
-        # user_id = int(request.headers['TOKEN'])
         messages = self.chats.get_messages(
-            # user_id=user_id,
             **request.media)
-        response.media = {
-            'messages': [{
-                'message_text': message.message_text,
-                'message_author': message.user.username,
-                'message_author_id': message.user.user_id,
-                'message_created': message.created
+        if len(messages) > 0 :
+            response.media = {
+                'messages': [{
+                    'message_id': message.message_id,
+                    'message_text': message.message_text,
+                    'message_author': message.user_id,
+                    'message_author_id': message.user_id,
+                    'message_created': message.created
+                    }
+                    for message in messages]
                 }
-                for message in messages]
-            }
+            response.status = falcon.HTTP_404
+        else:
+            response.media = {
+                'message': 'No messages in this chat yet'
+                }
 
     @join_point
     def on_post_add_chat(self, request: Request, response:Response):
         self.chats.create_chat(**request.media)
+        response.media = {
+            'message': 'chat was successfully created'
+            }
+        response.status = falcon.HTTP_201
+
+    def on_post_send_message(self, request: Request, response: Response):
+        self.chats.send_message(**request.media)
+        response.media = {
+            'message': 'message was sent'
+            }
+        response.status = falcon.HTTP_200
 
 @component
 class Users:

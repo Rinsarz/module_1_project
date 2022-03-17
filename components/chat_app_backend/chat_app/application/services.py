@@ -22,13 +22,14 @@ class UserInfo(DTO):
 
 class ChatInfo(DTO):
     chat_id: Optional[int]
-    creator_id: int
+    creator: int
     info: str
 
 
 class MessageInfo(DTO):
-    message_id: int
-    user_id: Optional[int] = None
+    message_id: Optional[int] = None
+    user_id: int
+    chat_id: int
     message_text: str
     created: Optional[datetime.datetime] = None
 
@@ -43,10 +44,10 @@ class Chats:
     def create_chat(self, chat_info: ChatInfo):
 
         new_chat = chat_info.create_obj(Chat)
-        creator = self.users_repo.get_by_id(chat_info.creator_id)
+        creator = self.users_repo.get_by_id(chat_info.creator)
         if creator is None:
-            raise errors.NoUser(user_id=chat_info.creator_id)
-        # new_chat.creator_id = creator
+            raise errors.NoUser(user_id=chat_info.creator)
+        new_chat.creator = creator
         new_chat.users.append(creator)
         self.chats_repo.add(new_chat)
 
@@ -126,16 +127,17 @@ class Chats:
                 raise errors.NoUser(user_id=user_id)
             chat.remove_participant(user)
 
-    def send_message(self, chat_id: int, user_id: int, message_info: MessageInfo):
-        user = self.users_repo.get_by_id(user_id)
-        chat = self.chats_repo.get_by_id(chat_id)
+    @validate_with_dto
+    def send_message(self, message_info: MessageInfo):
+        user = self.users_repo.get_by_id(message_info.user_id)
+        chat = self.chats_repo.get_by_id(message_info.chat_id)
         message = message_info.create_obj(Message)
 
         if chat is None:
-            raise errors.NoChat(chat_id=chat_id)
+            raise errors.NoChat(chat_id=message_info.chat_id)
 
         if not user:
-            raise errors.NoUser(chat_id=chat_id)
+            raise errors.NoUser(chat_id=message_info.chat_id)
 
         if user not in chat.users:
             # TODO how check participant permission?
@@ -143,6 +145,7 @@ class Chats:
 
         chat.add_message(message)
 
+    @validate_arguments
     def get_messages(self, chat_id: int, user_id: int) -> List[Message]:
         user = self.users_repo.get_by_id(user_id)
         chat = self.chats_repo.get_by_id(chat_id)
@@ -155,7 +158,7 @@ class Chats:
 
         if not chat.is_creator(user_id):
             # TODO how check admin permission?
-            return
+            raise errors.NoPermission(user_id=user_id)
 
         return chat.messages
 
