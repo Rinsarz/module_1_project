@@ -19,11 +19,19 @@ class UserInfo(DTO):
     password: str
     email: str
 
+class UserInfoShort(DTO):
+    user_id: int
+    username: str
+
 
 class ChatInfo(DTO):
     chat_id: Optional[int]
     creator: int
     info: str
+
+class ChatInfoForLook(DTO):
+    user_id: int
+    chat_id: int
 
 
 class MessageInfo(DTO):
@@ -51,14 +59,26 @@ class Chats:
         new_chat.users.append(creator)
         self.chats_repo.add(new_chat)
 
-    def add_participant(self, chat_id: int, user_id: int, new_user: User):
+
+    @join_point
+    @validate_arguments
+    def add_participant(self, chat_id: int, user_id: int, new_user_id: int) -> ChatInfoForLook:
         chat = self.chats_repo.get_by_id(chat_id)
         if not chat.is_creator(user_id):
-            return
-
+            raise errors.NoPermission(user_id=user_id)
         if not chat:
             raise errors.NoChat(chat_id=chat_id)
+        new_user = self.users_repo.get_by_id(new_user_id)
+        if new_user is None:
+            raise errors.NoUser(user_id=new_user_id)
         chat.add_participant(new_user)
+        return ChatInfoForLook.parse_obj({"user_id": new_user_id, "chat_id": chat.chat_id})
+
+            # chat.set_status(user_to_remove_id, chat_id, 'removed')
+    @join_point
+    @validate_arguments
+    def set_status(self, user_id: int, chat_id: int, status: str):
+        self.chats_repo.set_status(user_id, chat_id, status)
 
     def update_chat_info(self, chat_info: ChatInfo, user_id: int):
         chat = self.chats_repo.get_by_id(chat_info.chat_id)
@@ -68,14 +88,15 @@ class Chats:
         if chat is None:
             raise errors.NoChat(chat_id=chat_info.chat_id)
 
+    @validate_arguments
     def delete_chat(self, chat_id: int, user_id: int):
         chat = self.chats_repo.get_by_id(chat_id)
         if not chat.is_creator(user_id):
-            # TODO how check admin permission?
-            return
+            raise errors.NoPermission(user_id=user_id)
         self.chats_repo.delete(chat)
 
-    def get_chat_info(self, chat_id: int, user_id: int) -> Optional[str]:
+    @validate_arguments
+    def get_chat_info(self, chat_id: int, user_id: int) -> Chat:
         chat = self.chats_repo.get_by_id(chat_id)
         user = self.users_repo.get_by_id(user_id)
 
@@ -85,11 +106,11 @@ class Chats:
             raise errors.NoUser(chat_id=chat_id)
 
         if user not in chat.users:
-            # TODO how check participant permission?
-            return
+            raise errors.NoPermission(user_id=user_id)
 
-        return chat.info
+        return chat
 
+    @validate_arguments
     def get_users_list(self, chat_id: int, user_id: int) -> Optional[List[User]]:
         chat = self.chats_repo.get_by_id(chat_id)
         user = self.users_repo.get_by_id(user_id)
@@ -102,20 +123,32 @@ class Chats:
             return
         return chat.users
 
-    def remove_participant(self, chat_id: int, user_id: int, user_to_remove_id: int):
+    @join_point
+    @validate_arguments
+    def remove_participant(self, chat_id: int, user_id: int, user_to_remove_id: int) -> ChatInfoForLook:
         chat = self.chats_repo.get_by_id(chat_id)
         if not chat:
             raise errors.NoChat(chat_id=chat_id)
 
         if not chat.is_creator(user_id):
-            # TODO how check admin permission?
-            return
+            raise errors.NoPermission(user_id=user_id)
+
+        if user_id == user_to_remove_id:
+            raise errors.NoPermission(user_id=user_id)
+
         user_to_remove = self.users_repo.get_by_id(user_to_remove_id)
         if not user_to_remove:
             raise errors.NoUser(user_id=user_to_remove_id)
-        chat.remove_participant(user_to_remove)
 
-    def quit_chat(self, chat_id: int, user_id: int):
+        if not chat.is_participant(user_to_remove):
+            raise errors.NoParticipant(user_id=user_to_remove_id)
+
+        chat.remove_participant(user_to_remove)
+        self.chats_repo.set_status(user_to_remove_id, chat_id, 'removed')
+        return ChatInfoForLook.parse_obj({"user_id": user_to_remove_id, "chat_id": chat.chat_id})
+
+    @validate_arguments
+    def quit_chat(self, chat_id: int, user_id: int) -> ChatInfoForLook:
         chat = self.chats_repo.get_by_id(chat_id)
         if chat is None:
             raise errors.NoChat(chat_id=chat_id)
@@ -126,6 +159,7 @@ class Chats:
             if user is None:
                 raise errors.NoUser(user_id=user_id)
             chat.remove_participant(user)
+        return ChatInfoForLook.parse_obj({"user_id": user_id, "chat_id": chat_id})
 
     @validate_with_dto
     def send_message(self, message_info: MessageInfo):
@@ -169,9 +203,11 @@ class Users:
 
     @join_point
     @validate_with_dto
-    def register_user(self, user_info: UserInfo):
+    def register_user(self, user_info: UserInfo) -> UserInfoShort:
         new_user = user_info.create_obj(User)
-        self.users_repo.add(new_user)
+        new_user = self.users_repo.add(new_user)
+        return UserInfoShort.parse_obj({'user_id': new_user.user_id, 'username': new_user.username})
+
 
     @validate_arguments
     def get_user_by_id(self, user_id: int):

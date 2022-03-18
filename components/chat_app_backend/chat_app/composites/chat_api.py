@@ -37,6 +37,10 @@ app = chat_api.create_app(
     users=Application.users
     )
 
+class Aspects:
+    services.join_points.join(DB.context)
+    chat_api.join_points.join(DB.context)
+
 if __name__ == '__main__':
     from wsgiref import simple_server
     with simple_server.make_server(

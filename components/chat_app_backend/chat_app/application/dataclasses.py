@@ -63,5 +63,5 @@ class Status:
 class ChatUser:
     user: User
     chat: Chat
-    changed:  Optional[str] = None  # FIXME how make datetime?
+    changed: Optional[str] = None  # FIXME how make datetime?
     status: Optional[str] = None

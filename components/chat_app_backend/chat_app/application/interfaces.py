@@ -15,6 +15,9 @@ class ChatsRepo(ABC):
     def delete(self, chat: Chat):
         ...
 
+    def set_status(self, chat_id: int, user_id: int, status: str):
+        ...
+
 
 class MessagesRepo(ABC):
     @abstractmethod

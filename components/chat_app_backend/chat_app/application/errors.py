@@ -12,3 +12,7 @@ class NoUser(AppError):
 class NoPermission(AppError):
     msg_template = "User with id {user_id} has no permissions to do this"
     code = 'chat.no_permission'
+
+class NoParticipant(AppError):
+    msg_template = "There is no user with id {user_id} in the chat"
+    code = 'chat.no_participant'
