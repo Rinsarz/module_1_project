@@ -40,16 +40,10 @@ entity messages{
 }
 
 
-entity statuses{
-    * **status_id**: int PK
-    * **status_name**: varchar
-
-}
 chats }o--|| users
 messages }o--|| users
 chat_users }o--|| users
 chats ||--|{ chat_users
-chat_users }o--||statuses
 messages }o--||chats
 
 @enduml

@@ -1,6 +1,6 @@
 from sqlalchemy import Table, \
     MetaData, Column, Integer, String, \
-    ForeignKey, DateTime
+    ForeignKey, DateTime, Boolean
 
 naming_convention = {
     'ix': 'ix_%(column_0_label)s',
@@ -24,12 +24,6 @@ users = Table(
     Column('email', String, nullable=False),
     )
 
-statuses = Table(
-    'statuses',
-    metadata,
-    Column('status_id', Integer, primary_key=True, autoincrement=True),
-    Column('status_name', String, nullable=False),
-    )
 
 chat_user = Table(
     'chat_user',
@@ -37,7 +31,8 @@ chat_user = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('chat_id', ForeignKey('chats.chat_id'), nullable=False),
     Column('user_id', ForeignKey('users.user_id'), nullable=False),
-    Column('status_id', String, nullable=True),
+    Column('is_active', Boolean, nullable=False),
+    Column('is_removed', Boolean, nullable=False),
     Column('changed', String, nullable=True),
     )
 

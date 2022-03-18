@@ -24,7 +24,6 @@ class Chats:
                 'messages': [{
                     'message_id': message.message_id,
                     'message_text': message.message_text,
-                    'message_author': message.user_id,
                     'message_author_id': message.user_id,
                     'message_created': message.created
                     }
@@ -58,8 +57,20 @@ class Chats:
         response.media = {
             'chat id': chat.chat_id,
             'chat info': chat.info,
-            'chat creator id': chat.creator.user_id,
-            'chat users:': [{user.user_id: user.username} for user in chat.users]
+            'chat creator id': chat.creator_id,
+            # 'chat users:': [{user.user_id: user.username} for user in chat.users]
+            }
+        response.status = falcon.HTTP_200
+
+    @join_point
+    def on_get_chat_participants(self, request: Request, response: Response):
+        users_short = self.chats.get_chat_participants(**request.media)
+        response.media = {
+            'chat participants': [
+                {
+                    'id': user.user_id,
+                    'username': user.username
+                 }for user in users_short]
             }
         response.status = falcon.HTTP_200
 
@@ -104,6 +115,11 @@ class Users:
             "user_info": user_info.dict()
             }
         response.status = falcon.HTTP_201
+
+    # @join_point
+    # def on_post_login(self, request: Request, response: Response):
+    #     pass
+
 
     @join_point
     def on_get_user_info(self, request: Request, response: Response):
