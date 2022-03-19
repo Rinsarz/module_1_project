@@ -6,7 +6,7 @@ from chat_app.application import dataclasses
 
 
 @pytest.fixture
-def chat_1(user_1, user_2):
+def chat_1(user_1):
     return dataclasses.Chat(
         chat_id=1,
         creator_id=user_1.user_id,
@@ -40,6 +40,15 @@ def user_2():
         username='Petrov',
         password='test_pass',
         email='petrov@test.ru'
+        )
+
+@pytest.fixture
+def user_3():
+    return dataclasses.User(
+        user_id=2,
+        username='Sidorov',
+        password='test_pass',
+        email='sidorov@test.ru'
         )
 
 
@@ -88,8 +97,8 @@ def message_from_user_1_chat_2(user_1, chat_2, date_string_2):
 @pytest.fixture
 def active_user_1_chat_1(user_1, chat_1):
     return dataclasses.ChatUser(
-        user_id=user_1,
-        chat_id=chat_1,
+        user_id=user_1.user_id,
+        chat_id=chat_1.chat_id,
         is_active=True,
         is_removed=False
         )
@@ -98,8 +107,8 @@ def active_user_1_chat_1(user_1, chat_1):
 @pytest.fixture
 def active_user_2_chat_1(user_2, chat_1):
     return dataclasses.ChatUser(
-        user_id=user_2,
-        chat_id=chat_1,
+        user_id=user_2.user_id,
+        chat_id=chat_1.chat_id,
         is_active=True,
         is_removed=False
         )
