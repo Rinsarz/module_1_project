@@ -1,7 +1,8 @@
-import wsgiref.simple_server
+import os
 from typing import Tuple, Union
-import falcon
+from classic.http_auth import Authenticator, strategies
 
+from . import auth
 
 from classic.http_api import App
 from chat_app.application import services
@@ -15,9 +16,13 @@ def create_app(
     users: services.Users,
 ) -> App:
 
+    authenticator = Authenticator(app_groups=auth.ALL_GROUPS)
+
+    authenticator.set_strategies(strategies.JWT(secret_key=os.getenv('JWT_SECRET')))
+
     app = App(prefix='/api')
     app.register(controllers.Users(users=users))
-    app.register(controllers.Chats(chats=chats))
+    app.register(controllers.Chats(authenticator=authenticator, chats=chats))
 
     return app
 

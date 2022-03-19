@@ -1,23 +1,22 @@
 import falcon
 from classic.components import component
+from classic.http_auth import authenticator_needed, authenticate
 from falcon import Request, Response
 
 from chat_app.application import services
 from .join_points import join_point
 
 
-@component
-class Users:
-    users: services.Users
-
-
+@authenticator_needed
 @component
 class Chats:
     chats: services.Chats
 
+    @authenticate
     @join_point
     def on_get_show_messages(self, request: Request, response: Response):
         messages = self.chats.get_messages(
+            user_id=request.context.client.user_id,
             **request.media)
         if len(messages) > 0:
             response.media = {
@@ -35,6 +34,7 @@ class Chats:
                 'message': 'No messages in this chat yet'
                 }
 
+    @authenticate
     @join_point
     def on_post_add_chat(self, request: Request, response: Response):
         self.chats.create_chat(**request.media)
@@ -43,6 +43,7 @@ class Chats:
             }
         response.status = falcon.HTTP_201
 
+    @authenticate
     @join_point
     def on_post_send_message(self, request: Request, response: Response):
         self.chats.send_message(**request.media)
@@ -51,6 +52,7 @@ class Chats:
             }
         response.status = falcon.HTTP_200
 
+    @authenticate
     @join_point
     def on_get_chat_info(self, request: Request, response: Response):
         chat = self.chats.get_chat_info(**request.media)
@@ -62,6 +64,7 @@ class Chats:
             }
         response.status = falcon.HTTP_200
 
+    @authenticate
     @join_point
     def on_get_chat_participants(self, request: Request, response: Response):
         users_short = self.chats.get_chat_participants(**request.media)
@@ -70,10 +73,11 @@ class Chats:
                 {
                     'id': user.user_id,
                     'username': user.username
-                 }for user in users_short]
+                    } for user in users_short]
             }
         response.status = falcon.HTTP_200
 
+    @authenticate
     @join_point
     def on_post_add_participant(self, request: Request, response: Response):
         new_user_data = self.chats.add_participant(**request.media)
@@ -82,6 +86,7 @@ class Chats:
             }
         response.status = falcon.HTTP_201
 
+    @authenticate
     @join_point
     def on_post_remove_participant(self, request: Request, response: Response):
         removed_user_data = self.chats.remove_participant(**request.media)
@@ -90,11 +95,13 @@ class Chats:
             }
         response.status = falcon.HTTP_200  # FIXME With 204 status there is no return
 
+    @authenticate
     @join_point
     def on_post_delete_chat(self, request: Request, response: Response):
         self.chats.delete_chat(**request.media)
         response.status = falcon.HTTP_204
 
+    @authenticate
     def on_post_quit_chat(self, request: Request, response: Response):
         quit_data = self.chats.quit_chat(**request.media)
         response.media = {
@@ -116,10 +123,9 @@ class Users:
             }
         response.status = falcon.HTTP_201
 
-    # @join_point
-    # def on_post_login(self, request: Request, response: Response):
-    #     pass
-
+    @join_point
+    def on_post_login(self, request: Request, response: Response):
+        pass
 
     @join_point
     def on_get_user_info(self, request: Request, response: Response):

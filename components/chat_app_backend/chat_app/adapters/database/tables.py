@@ -33,7 +33,7 @@ chat_user = Table(
     Column('user_id', ForeignKey('users.user_id'), nullable=False),
     Column('is_active', Boolean, nullable=False),
     Column('is_removed', Boolean, nullable=False),
-    Column('changed', String, nullable=True),
+    Column('changed', DateTime, nullable=True),
     )
 
 chats = Table(
@@ -51,5 +51,5 @@ messages = Table(
     Column('user_id', ForeignKey('users.user_id'), nullable=False),
     Column('chat_id', ForeignKey('chats.chat_id'), nullable=False),
     Column('message_text', String, nullable=False),
-    Column('created', String, nullable=False),
+    Column('created', DateTime, nullable=False),
     )

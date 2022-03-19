@@ -17,8 +17,8 @@ class Message:
     user_id: User
     chat_id: "Chat"
     message_text: str
-    created: Optional[str] = attr.ib(
-        factory=lambda: datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    created: Optional[datetime.datetime] = attr.ib(
+        factory=lambda: datetime.datetime.utcnow())
     message_id: Optional[int] = None
 
 
@@ -34,9 +34,10 @@ class ChatUser:
     user_id: User
     chat_id: Chat
     is_active: bool
-    changed: Optional[str] = attr.ib(
-        factory=lambda: datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    changed: Optional[datetime.datetime] = attr.ib(
+        factory=lambda: datetime.datetime.utcnow())
     is_removed: bool = False
+
 
 @attr.dataclass
 class UserShort:
