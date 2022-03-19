@@ -22,9 +22,12 @@ def users_repo(user_1):
 
 
 @pytest.fixture(scope='function')
-def messages_repo(message_1, message_2):
+def messages_repo(message_from_user_1_chat_1, message_from_user_2_chat_1):
     messages_repo = Mock(interfaces.MessagesRepo)
-    messages_repo.get_chat_messages = Mock(return_value=[message_1, message_2])
+    messages_repo.get_chat_messages = Mock(return_value=[
+        message_from_user_1_chat_1,
+        message_from_user_2_chat_1
+        ])
 
     return messages_repo
 

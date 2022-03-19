@@ -14,13 +14,13 @@ class DB:
     users_repo = database.repositories.UsersRepo(context=context)
     chats_repo = database.repositories.ChatsRepo(context=context)
     messages_repo = database.repositories.MessagesRepo(context=context)
-    chat_user_repo = database.repositories.ChatUsersRepo(context=context)
+    chat_users_repo = database.repositories.ChatUsersRepo(context=context)
 
 class Application:
     chats = services.Chats(
         chats_repo=DB.chats_repo,
         users_repo=DB.users_repo,
-        chat_user_repo=DB.chat_user_repo,
+        chat_users_repo=DB.chat_users_repo,
         messages_repo=DB.messages_repo
         )
 

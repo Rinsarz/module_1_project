@@ -55,7 +55,7 @@ class ChatUserInfo(DTO):
 class Chats:
     chats_repo: interfaces.ChatsRepo
     users_repo: interfaces.UsersRepo
-    chat_user_repo: interfaces.ChatUsersRepo
+    chat_users_repo: interfaces.ChatUsersRepo
     messages_repo: interfaces.MessagesRepo
 
     @join_point
@@ -74,7 +74,7 @@ class Chats:
                                       is_removed=False)
 
         chat_user = chat_user_info.create_obj(ChatUser)
-        self.chat_user_repo.add_participant(chat_user)
+        self.chat_users_repo.add_participant(chat_user)
 
     @staticmethod
     def is_creator(chat: Chat, user_id: int):
@@ -82,7 +82,7 @@ class Chats:
 
     @validate_arguments
     def is_participant(self, chat_id: int, user_id: int):
-        participant = self.chat_user_repo.get_participant(chat_id, user_id)
+        participant = self.chat_users_repo.get_participant(chat_id, user_id)
         if participant is not None:
             return True
         return False
@@ -102,7 +102,7 @@ class Chats:
         if new_user is None:
             raise errors.NoUser(user_id=new_user_id)
 
-        chat_user = self.chat_user_repo.get_participant(chat_id, new_user_id)
+        chat_user = self.chat_users_repo.get_participant(chat_id, new_user_id)
 
         if chat_user is not None and (not chat_user.is_active and not chat_user.is_removed):
             raise errors.NoPermission(user_id=user_id)
@@ -112,7 +112,7 @@ class Chats:
             chat_id=chat.chat_id, is_active=True, is_removed=False
             )
         chat_user = chat_user_info.create_obj(ChatUser)
-        self.chat_user_repo.add_participant(chat_user)
+        self.chat_users_repo.add_participant(chat_user)
         return ChatInfoForLook.parse_obj({'user_id': new_user_id, 'chat_id': chat.chat_id})
 
     def update_chat_info(self, chat_info: ChatInfo, user_id: int):
@@ -158,7 +158,7 @@ class Chats:
         if not self.is_participant(chat_id, user_id):
             raise errors.NoPermission(user_id=user_id)
 
-        users = self.chat_user_repo.get_all_participants(chat_id)
+        users = self.chat_users_repo.get_all_participants(chat_id)
         return users
 
     @join_point
@@ -181,7 +181,7 @@ class Chats:
         if not self.is_participant(chat_id, user_id):
             raise errors.NoParticipant(user_id=user_to_remove_id)
 
-        status = self.chat_user_repo.get_participant(chat_id=chat_id, user_id=user_id)
+        status = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_id)
         status.is_active = False
         status.is_removed = True
 
@@ -199,7 +199,7 @@ class Chats:
             if user is None:
                 raise errors.NoUser(user_id=user_id)
 
-            status = self.chat_user_repo.get_participant(chat_id=chat_id, user_id=user_id)
+            status = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_id)
             status.is_active = False
             status.is_removed = False
         return ChatInfoForLook.parse_obj({'user_id': user_id, 'chat_id': chat_id})
@@ -259,7 +259,3 @@ class Users:
         if user is None:
             raise errors.NoUser(user_id=user_id)
         return user
-
-# class Messenger:
-#     users_repo: interfaces.UsersRepo
-#     chats_repo: interfaces.ChatsRepo
