@@ -18,7 +18,11 @@ def create_app(
 
     authenticator = Authenticator(app_groups=auth.ALL_GROUPS)
 
-    authenticator.set_strategies(strategies.JWT(secret_key=os.getenv('JWT_SECRET')))
+    if is_dev_mode:
+        authenticator.set_strategies(auth.test_strategy)
+    else:
+        # authenticator.set_strategies(strategies.JWT(secret_key=os.getenv('JWT_SECRET')))
+        authenticator.set_strategies(auth.header_id_strategy)
 
     app = App(prefix='/api')
     app.register(controllers.Users(users=users))

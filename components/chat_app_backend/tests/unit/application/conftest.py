@@ -35,7 +35,7 @@ def messages_repo(message_from_user_1_chat_1, message_from_user_2_chat_1):
 @pytest.fixture(scope='function')
 def chat_users_repo(active_user_1_chat_1, active_user_2_chat_1):
     chat_users_repo = Mock(interfaces.ChatUsersRepo)
-    chat_users_repo.get_participant = Mock(return_value=[active_user_1_chat_1,
-                                                         active_user_2_chat_1])
+    chat_users_repo.get_participant = Mock(return_value=active_user_1_chat_1)
+
 
     return chat_users_repo

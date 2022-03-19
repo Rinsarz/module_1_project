@@ -8,7 +8,7 @@ class ChatsRepo(ABC):
         ...
 
     @abstractmethod
-    def get_by_id(self, _id: int) -> Chat:
+    def get_by_id(self, chat_id: int) -> Chat:
         ...
 
     @abstractmethod
@@ -48,6 +48,6 @@ class UsersRepo:
         ...
 
     @abstractmethod
-    def get_by_id(self, _id: int) -> User:
+    def get_by_id(self, user_id: int) -> User:
         ...
 

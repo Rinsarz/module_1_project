@@ -16,3 +16,7 @@ class NoPermission(AppError):
 class NoParticipant(AppError):
     msg_template = "There is no user with id {user_id} in the chat"
     code = 'chat.no_participant'
+
+class AlreadyParticipant(AppError):
+    msg_template = "User with id {user_id} is already in the chat"
+    code = 'chat.already_participant'

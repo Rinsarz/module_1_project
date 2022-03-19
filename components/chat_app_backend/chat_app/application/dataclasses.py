@@ -14,8 +14,8 @@ class User:
 
 @attr.dataclass
 class Message:
-    user_id: User
-    chat_id: "Chat"
+    user_id: int
+    chat_id: int
     message_text: str
     created: Optional[datetime.datetime] = attr.ib(
         factory=lambda: datetime.datetime.utcnow())
@@ -24,15 +24,15 @@ class Message:
 
 @attr.dataclass
 class Chat:
-    creator_id: User
+    creator_id: int
     info: str
     chat_id: Optional[int] = None
 
 
 @attr.dataclass
 class ChatUser:
-    user_id: User
-    chat_id: Chat
+    user_id: int
+    chat_id: int
     is_active: bool
     changed: Optional[datetime.datetime] = attr.ib(
         factory=lambda: datetime.datetime.utcnow())

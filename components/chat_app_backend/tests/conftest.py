@@ -9,7 +9,7 @@ from chat_app.application import dataclasses
 def chat_1(user_1, user_2):
     return dataclasses.Chat(
         chat_id=1,
-        creator_id=user_1,
+        creator_id=user_1.user_id,
         info='test chat',
         )
 
@@ -18,7 +18,7 @@ def chat_1(user_1, user_2):
 def chat_2(user_2):
     return dataclasses.Chat(
         chat_id=1,
-        creator_id=user_2,
+        creator_id=user_2.user_id,
         info='test chat',
         )
 
@@ -45,12 +45,12 @@ def user_2():
 
 @pytest.fixture
 def date_string_1():
-    return "12/11/2018 09:15:32"
+    return "12-11-2018 09:15:32"
 
 
 @pytest.fixture
 def date_string_2():
-    return "23/12/2019 10:34:21"
+    return "23-12-2019 10:34:21"
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ def message_from_user_1_chat_1(user_1, chat_1, date_string_1):
         message_id=1,
         user_id=user_1,
         chat_id=chat_1,
-        created=datetime.datetime.strptime(date_string_1, "%d/%m/%Y %H:%M:%S"),
+        created=datetime.datetime.strptime(date_string_1, "%d-%m-%Y %H:%M:%S"),
         message_text='Message 1 text'
         )
 
@@ -70,7 +70,17 @@ def message_from_user_2_chat_1(user_2, chat_1, date_string_2):
         message_id=2,
         user_id=user_2,
         chat_id=chat_1,
-        created=datetime.datetime.strptime(date_string_2, "%d/%m/%Y %H:%M:%S"),
+        created=datetime.datetime.strptime(date_string_2, "%d-%m-%Y %H:%M:%S"),
+        message_text='Message 2 text'
+        )
+
+@pytest.fixture
+def message_from_user_1_chat_2(user_1, chat_2, date_string_2):
+    return dataclasses.Message(
+        message_id=2,
+        user_id=user_1,
+        chat_id=chat_2,
+        created=datetime.datetime.strptime(date_string_2, "%d-%m-%Y %H:%M:%S"),
         message_text='Message 2 text'
         )
 
