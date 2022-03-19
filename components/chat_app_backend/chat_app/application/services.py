@@ -6,7 +6,7 @@ from classic.aspects import PointCut
 from classic.components import component
 from pydantic import validate_arguments
 
-from chat_app.application.dataclasses import User, Chat, Message, ChatUser, UserShort
+from chat_app.application.dataclasses import User, Chat, Message, ChatUser, UserShort, ChatUserShort
 from . import interfaces, errors
 
 join_points = PointCut()
@@ -29,6 +29,7 @@ class ChatInfo(DTO):
     chat_id: Optional[int]
     creator_id: int
     info: str
+
 
 class ChatInfoUpdate(DTO):
     chat_id: int
@@ -64,6 +65,38 @@ class Chats:
     chat_users_repo: interfaces.ChatUsersRepo
     messages_repo: interfaces.MessagesRepo
 
+    @staticmethod
+    def _check_creator(chat: Chat, user_id: int):
+        if not chat.creator_id == user_id:
+            raise errors.NoPermission(user_id=user_id)
+
+    @validate_arguments
+    def _check_participant(self, chat_id: int, user_id: int):
+        self.get_participant(chat_id=chat_id, user_id=user_id)
+
+    @join_point
+    @validate_arguments
+    def _check_chat(self, chat_id: int):
+        self.get_chat(chat_id=chat_id)
+
+    @join_point
+    @validate_arguments
+    def _add_chat_participant(self, chat_id: int, user_id: int, new_user_id: int):
+        participant = self.chat_users_repo.get_participant(chat_id, new_user_id)
+
+        if participant is not None and (not participant.is_active and not participant.is_removed):
+            raise errors.NoPermission(user_id=user_id)
+
+        if participant is not None:
+            raise errors.AlreadyParticipant(user_id=new_user_id)
+
+        chat_user_info = ChatUserInfo(
+            user_id=new_user_id,
+            chat_id=chat_id, is_active=True, is_removed=False
+            )
+        chat_user = chat_user_info.create_obj(ChatUser)
+        self.chat_users_repo.add_participant(chat_user)
+
     @join_point
     @validate_with_dto
     def create_chat(self, chat_info: ChatInfo):
@@ -82,29 +115,13 @@ class Chats:
         chat_user = chat_user_info.create_obj(ChatUser)
         self.chat_users_repo.add_participant(chat_user)
 
-    @staticmethod
-    def is_creator(chat: Chat, user_id: int):
-        return chat.creator_id == user_id
-
     @join_point
     @validate_arguments
     def get_participant(self, chat_id: int, user_id: int):
-        participant = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_id)
+        participant = self.chat_users_repo.get_participant(chat_id, user_id)
         if participant is None:
             raise errors.NoPermission(user_id=user_id)
         return participant
-
-    @staticmethod
-    def __check_creator(chat: Chat, user_id: int):
-        if not chat.creator_id == user_id:
-            raise errors.NoPermission(user_id=user_id)
-
-    @validate_arguments
-    def __check_participant(self, chat_id: int, user_id: int):
-        self.get_participant(chat_id=chat_id, user_id=user_id)
-
-
-
 
     @join_point
     @validate_arguments
@@ -116,11 +133,6 @@ class Chats:
 
     @join_point
     @validate_arguments
-    def __check_chat(self, chat_id: int):
-        self.get_chat(chat_id=chat_id)
-
-    @join_point
-    @validate_arguments
     def get_user(self, user_id: int) -> User:
         user = self.users_repo.get_by_id(user_id=user_id)
         if not user:
@@ -129,74 +141,55 @@ class Chats:
 
     @join_point
     @validate_arguments
-    def add_participant(self, chat_id: int, user_id: int, new_user_id: int) -> ChatInfoForLook:
+    def add_participant(self, chat_id: int, user_id: int, new_user_id: int) -> ChatUserShort:
         chat = self.get_chat(chat_id=chat_id)
-        self.__check_creator(chat, user_id)
+        self._check_creator(chat=chat, user_id=user_id)
 
-        new_user = self.users_repo.get_by_id(new_user_id)
+        new_user = self.users_repo.get_by_id(user_id=new_user_id)
         if new_user is None:
             raise errors.NoUser(user_id=new_user_id)
 
-        self.__add_chat_participant(chat_id=chat_id, user_id=user_id, new_user_id=new_user_id)
-        return ChatInfoForLook.parse_obj({'user_id': new_user_id, 'chat_id': chat.chat_id})
-
-    @join_point
-    @validate_arguments
-    def __add_chat_participant(self, chat_id: int, user_id: int, new_user_id: int):
-        participant = self.chat_users_repo.get_participant(chat_id, new_user_id)
-
-        if participant is not None and (not participant.is_active and not participant.is_removed):
-            raise errors.NoPermission(user_id=user_id)
-
-        if participant is not None:
-            raise errors.AlreadyParticipant(user_id=new_user_id)
-
-        chat_user_info = ChatUserInfo(
-            user_id=new_user_id,
-            chat_id=chat_id, is_active=True, is_removed=False
-            )
-        chat_user = chat_user_info.create_obj(ChatUser)
-        self.chat_users_repo.add_participant(chat_user)
+        self._add_chat_participant(chat_id=chat_id, user_id=user_id, new_user_id=new_user_id)
+        return ChatUserShort(user_id=new_user_id, chat_id=chat.chat_id)
 
     @join_point
     @validate_with_dto
     def update_chat_info(self, chat_info_update: ChatInfoUpdate):
-        chat = self.get_chat(chat_info_update.chat_id)
-        self.__check_creator(chat, chat_info_update.user_id)
+        chat = self.get_chat(chat_id=chat_info_update.chat_id)
+        self._check_creator(chat=chat, user_id=chat_info_update.user_id)
         delattr(chat_info_update, "user_id")
         chat_info_update.populate_obj(chat)
-
 
     @join_point
     @validate_arguments
     def delete_chat(self, chat_id: int, user_id: int):
-        chat = self.get_chat(chat_id)
-        self.__check_creator(chat, user_id)
+        chat = self.get_chat(chat_id=chat_id)
+        self._check_creator(chat=chat, user_id=user_id)
         self.chats_repo.delete(chat)
 
     @join_point
     @validate_arguments
     def get_chat_info(self, chat_id: int, user_id: int) -> Chat:
-        chat = self.get_chat(chat_id)
-        self.__check_participant(chat_id=chat_id, user_id=user_id)
+        chat = self.get_chat(chat_id=chat_id)
+        self._check_participant(chat_id=chat_id, user_id=user_id)
         return chat
 
     @join_point
     @validate_arguments
     def get_chat_participants(self, chat_id: int, user_id: int) -> List[UserShort]:
-        self.__check_chat(chat_id)
-        user = self.get_user(user_id)
+        self._check_chat(chat_id=chat_id)
+        user = self.get_user(user_id=user_id)
 
-        self.__check_participant(chat_id=chat_id, user_id=user_id)
-        users = self.chat_users_repo.get_all_participants(chat_id)
+        self._check_participant(chat_id=chat_id, user_id=user_id)
+        users = self.chat_users_repo.get_all_participants(chat_id=chat_id)
         return users
 
     @join_point
     @validate_arguments
     def remove_participant(self, chat_id: int, user_id: int, user_to_remove_id: int) -> ChatInfoForLook:
-        chat = self.get_chat(chat_id)
+        chat = self.get_chat(chat_id=chat_id)
 
-        self.__check_creator(chat, user_id)
+        self._check_creator(chat=chat, user_id=user_id)
 
         if user_id == user_to_remove_id:
             raise errors.NoPermission(user_id=user_id)
@@ -205,7 +198,7 @@ class Chats:
         if not user_to_remove:
             raise errors.NoUser(user_id=user_to_remove_id)
 
-        self.__check_participant(chat_id=chat_id, user_id=user_to_remove_id)
+        self._check_participant(chat_id=chat_id, user_id=user_to_remove_id)
 
         status = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_to_remove_id)
         status.is_active = False
@@ -215,7 +208,7 @@ class Chats:
 
     @join_point
     @validate_arguments
-    def quit_chat(self, chat_id: int, user_id: int) -> ChatInfoForLook:
+    def quit_chat(self, chat_id: int, user_id: int) -> ChatUserShort:
         chat = self.get_chat(chat_id)
         if self.is_creator(chat, user_id):
             self.chats_repo.delete(chat)
@@ -229,19 +222,19 @@ class Chats:
             status = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_id)
             status.is_active = False
             status.is_removed = False
-        return ChatInfoForLook.parse_obj({'user_id': user_id, 'chat_id': chat_id})
+        return ChatUserShort(user_id=user_id, chat_id=chat_id)
 
     @join_point
     @validate_with_dto
     def send_message(self, message_info: MessageInfo):
         user = self.users_repo.get_by_id(message_info.user_id)
-        chat = self.get_chat(message_info.chat_id)
+        self._check_chat(message_info.chat_id)
         message = message_info.create_obj(Message)
 
         if not user:
             raise errors.NoUser(user_id=message_info.user_id)
 
-        self.__check_participant(chat_id=message_info.chat_id, user_id=message_info.user_id)
+        self._check_participant(chat_id=message_info.chat_id, user_id=message_info.user_id)
         self.messages_repo.add(message)
 
     @join_point
@@ -252,7 +245,7 @@ class Chats:
         if not user:
             raise errors.NoUser(user_id=user_id)
 
-        self.__check_creator(chat=chat, user_id=user_id)
+        self._check_creator(chat=chat, user_id=user_id)
         messages = self.messages_repo.get_chat_messages(chat_id)
         return messages
 

@@ -40,6 +40,12 @@ class ChatUser:
 
 
 @attr.dataclass
+class ChatUserShort:
+    user_id: int
+    chat_id: int
+
+
+@attr.dataclass
 class UserShort:
     user_id: int
     username: str

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from classic.components import component
 from sqlalchemy import select, update
@@ -41,11 +41,11 @@ class ChatUsersRepo(BaseRepository, interfaces.ChatUsersRepo):
         self.session.add(chat_user)
         self.session.flush()
 
-    def get_participant(self, chat_id: int, user_id: int):
+    def get_participant(self, chat_id: int, user_id: int) -> ChatUser:
         query = select(ChatUser).where(ChatUser.user_id == user_id, ChatUser.chat_id == chat_id)
         return self.session.execute(query).scalars().one_or_none()
 
-    def get_all_participants(self, chat_id: int):
+    def get_all_participants(self, chat_id: int) -> List[UserShort]:
         # query = select(ChatUser).where(ChatUser.chat_id == chat_id)
         query = select([tables.chat_user.c.user_id]).where(tables.chat_user.c.chat_id == chat_id,
                                                            tables.chat_user.c.is_active == True).alias("id_list")
@@ -62,7 +62,7 @@ class MessagesRepo(BaseRepository, interfaces.MessagesRepo):
         self.session.flush()
         self.session.commit()
 
-    def get_chat_messages(self, chat_id: int):
+    def get_chat_messages(self, chat_id: int) -> List[Message]:
         query = select(Message).where(Message.chat_id == chat_id)
         return self.session.execute(query).scalars().all()
 
