@@ -80,3 +80,7 @@ class UsersRepo(BaseRepository, interfaces.UsersRepo):
         query = select(User).where(User.user_id == user_id)
         return self.session.execute(query).scalars().one_or_none()
 
+    def get_by_email(self, email: str) -> User:
+        query = select(User).where(User.email == email)
+        return self.session.execute(query).scalars().one_or_none()
+

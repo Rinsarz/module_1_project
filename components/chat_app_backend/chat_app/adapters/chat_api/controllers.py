@@ -155,7 +155,11 @@ class Users:
 
     @join_point
     def on_post_login(self, request: Request, response: Response):
-        pass
+        user_data = self.users.login(
+            **request.media
+        )
+        response.append_header('user_id', user_data.user_id)
+        response.status = falcon.HTTP_200
 
     # @join_point
     # def on_get_user_info(self, request: Request, response: Response):

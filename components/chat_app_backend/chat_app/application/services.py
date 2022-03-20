@@ -24,6 +24,10 @@ class UserInfoShort(DTO):
     user_id: int
     username: str
 
+class UserInfoLogin(DTO):
+    email: str
+    password: str
+
 
 class ChatInfo(DTO):
     chat_id: Optional[int]
@@ -102,10 +106,10 @@ class Chats:
     def create_chat(self, chat_info: ChatInfo):
 
         new_chat = chat_info.create_obj(Chat)
-        creator = self.users_repo.get_by_id(chat_info.creator_id)
+        creator = self.users_repo.get_by_id(user_id=chat_info.creator_id)
         if creator is None:
             raise errors.NoUser(user_id=chat_info.creator_id)
-        new_chat = self.chats_repo.add(new_chat)
+        new_chat = self.chats_repo.add(chat=new_chat)
 
         chat_user_info = ChatUserInfo(user_id=creator.user_id,
                                       chat_id=new_chat.chat_id,
@@ -113,7 +117,7 @@ class Chats:
                                       is_removed=False)
 
         chat_user = chat_user_info.create_obj(ChatUser)
-        self.chat_users_repo.add_participant(chat_user)
+        self.chat_users_repo.add_participant(chat_user=chat_user)
 
     @join_point
     @validate_arguments
@@ -165,7 +169,7 @@ class Chats:
     def delete_chat(self, chat_id: int, user_id: int):
         chat = self.get_chat(chat_id=chat_id)
         self._check_creator(chat=chat, user_id=user_id)
-        self.chats_repo.delete(chat)
+        self.chats_repo.delete(chat=chat)
 
     @join_point
     @validate_arguments
@@ -186,7 +190,7 @@ class Chats:
 
     @join_point
     @validate_arguments
-    def remove_participant(self, chat_id: int, user_id: int, user_to_remove_id: int) -> ChatInfoForLook:
+    def remove_participant(self, chat_id: int, user_id: int, user_to_remove_id: int) -> ChatUserShort:
         chat = self.get_chat(chat_id=chat_id)
 
         self._check_creator(chat=chat, user_id=user_id)
@@ -204,7 +208,7 @@ class Chats:
         status.is_active = False
         status.is_removed = True
 
-        return ChatInfoForLook.parse_obj({'user_id': user_to_remove_id, 'chat_id': chat.chat_id})
+        return ChatUserShort(user_id=user_to_remove_id, chat_id=chat.chat_id)
 
     @join_point
     @validate_arguments
@@ -256,10 +260,14 @@ class Users:
 
     @join_point
     @validate_with_dto
-    def register_user(self, user_info: UserInfo) -> UserInfoShort:
+    def register_user(self, user_info: UserInfo) -> UserShort:
+        user = self.users_repo.get_by_email(email=user_info.email)
+        if user is not None:
+            raise errors.AlreadyRegistered(email=user_info.email)
         new_user = user_info.create_obj(User)
-        new_user = self.users_repo.add(new_user)
-        return UserInfoShort.parse_obj({'user_id': new_user.user_id, 'username': new_user.username})
+        new_user = self.users_repo.add(user=new_user)
+        return UserShort(user_id=new_user.user_id,
+                         username=new_user.username)
 
     @join_point
     @validate_arguments
@@ -268,3 +276,12 @@ class Users:
         if user is None:
             raise errors.NoUser(user_id=user_id)
         return user
+
+    @join_point
+    @validate_arguments
+    def login(self, email: str, password: str) -> UserShort:
+        user = self.users_repo.get_by_email(email=email)
+        if user is None or user.password != password:
+            raise errors.NotRegistered()
+
+        return UserShort(user_id=user.user_id, username=user.username)

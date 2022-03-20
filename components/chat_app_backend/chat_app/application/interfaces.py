@@ -30,8 +30,6 @@ class ChatUsersRepo(ABC):
         pass
 
 
-
-
 class MessagesRepo(ABC):
     @abstractmethod
     def add(self, message: Message):
@@ -51,3 +49,6 @@ class UsersRepo:
     def get_by_id(self, user_id: int) -> User:
         ...
 
+    @abstractmethod
+    def get_by_email(self, email: str) -> User:
+        pass
