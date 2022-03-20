@@ -32,6 +32,13 @@ def user_1():
         email='ivanov@test.ru'
         )
 
+@pytest.fixture
+def user_short_1():
+    return dataclasses.UserShort(
+        user_id=1,
+        username='Ivanov'
+        )
+
 
 @pytest.fixture
 def user_2():
@@ -111,4 +118,11 @@ def active_user_2_chat_1(user_2, chat_1):
         chat_id=chat_1.chat_id,
         is_active=True,
         is_removed=False
+        )
+
+@pytest.fixture
+def chat_user_short(user_2, chat_1):
+    return dataclasses.ChatUserShort(
+        user_id=user_2.user_id,
+        chat_id=chat_1.chat_id,
         )
