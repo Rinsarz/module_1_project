@@ -139,7 +139,7 @@ class Chats:
             }
         response.status = falcon.HTTP_200
 
-
+@authenticator_needed
 @component
 class Users:
     users: services.Users
@@ -159,6 +159,11 @@ class Users:
             **request.media
         )
         response.append_header('user_id', user_data.user_id)
+        token = self.authenticator.create_token(
+                                       user_id=user_data.user_id,
+                                       username=user_data.username)
+        if token is not None:
+            response.append_header('token', token)
         response.status = falcon.HTTP_200
 
     # @join_point

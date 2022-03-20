@@ -6,7 +6,9 @@ from classic.aspects import PointCut
 from classic.components import component
 from pydantic import validate_arguments
 
-from chat_app.application.dataclasses import User, Chat, Message, ChatUser, UserShort, ChatUserShort
+from chat_app.application.dataclasses import User, Chat, Message, \
+    ChatUser, UserShort, ChatUserShort
+
 from . import interfaces, errors
 
 join_points = PointCut()
@@ -214,7 +216,7 @@ class Chats:
     @validate_arguments
     def quit_chat(self, chat_id: int, user_id: int) -> ChatUserShort:
         chat = self.get_chat(chat_id)
-        if self.is_creator(chat, user_id):
+        if chat.creator_id == user_id:
             self.chats_repo.delete(chat)
         else:
             user = self.users_repo.get_by_id(user_id)
