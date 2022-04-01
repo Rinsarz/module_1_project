@@ -60,8 +60,6 @@ test_strategy = strategies.Dummy(
     )
 
 
-
-
 class SimpleAuthenticator(Authenticator):
     def __init__(self, *args, **kwargs):
         super(SimpleAuthenticator, self).__init__(*args, **kwargs)

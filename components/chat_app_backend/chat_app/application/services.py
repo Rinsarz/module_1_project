@@ -76,17 +76,13 @@ class Chats:
         if not chat.creator_id == user_id:
             raise errors.NoPermission(user_id=user_id)
 
-    @validate_arguments
     def _check_participant(self, chat_id: int, user_id: int):
         self.get_participant(chat_id=chat_id, user_id=user_id)
 
-    @join_point
-    @validate_arguments
     def _check_chat(self, chat_id: int):
         self.get_chat(chat_id=chat_id)
 
-    @join_point
-    @validate_arguments
+
     def _add_chat_participant(self, chat_id: int, user_id: int, new_user_id: int):
         participant = self.chat_users_repo.get_participant(chat_id, new_user_id)
 
@@ -123,7 +119,7 @@ class Chats:
 
     @join_point
     @validate_arguments
-    def get_participant(self, chat_id: int, user_id: int):
+    def get_participant(self, chat_id: int, user_id: int) -> ChatUser:
         participant = self.chat_users_repo.get_participant(chat_id, user_id)
         if participant is None:
             raise errors.NoPermission(user_id=user_id)
@@ -184,7 +180,7 @@ class Chats:
     @validate_arguments
     def get_chat_participants(self, chat_id: int, user_id: int) -> List[UserShort]:
         self._check_chat(chat_id=chat_id)
-        user = self.get_user(user_id=user_id)
+        _ = self.get_user(user_id=user_id)
 
         self._check_participant(chat_id=chat_id, user_id=user_id)
         users = self.chat_users_repo.get_all_participants(chat_id=chat_id)
@@ -223,8 +219,7 @@ class Chats:
             if user is None:
                 raise errors.NoUser(user_id=user_id)
 
-            # Useless check as the creator is a chat participant
-            # self.__check_participant(chat_id=chat_id, user_id=user_id)
+            self._check_participant(chat_id=chat_id, user_id=user_id)
             status = self.chat_users_repo.get_participant(chat_id=chat_id, user_id=user_id)
             status.is_active = False
             status.is_removed = False

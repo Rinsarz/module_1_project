@@ -149,7 +149,10 @@ class Users:
         user_info = self.users.register_user(**request.media)
         response.media = {
             "message": "Account successfully created",
-            "user_info": user_info.dict()
+            "user_info": {
+                'username': user_info.username,
+                'user_id': user_info.user_id
+                }
             }
         response.status = falcon.HTTP_201
 

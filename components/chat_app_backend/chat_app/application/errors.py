@@ -33,4 +33,4 @@ class NotRegistered(AppError):
 
 class AlreadyRegistered(AppError):
     msg_template = "User with email {email} is already registered"
-    code = 'chat.already_registered'
+    code = 'user.already_registered'

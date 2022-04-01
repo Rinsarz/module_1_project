@@ -28,12 +28,10 @@ class ChatsRepo(BaseRepository, interfaces.ChatsRepo):
             .values(status=status)
         self.session.execute(query)
         self.session.flush()
-        self.session.commit()
 
     def delete(self, chat: Chat):
         self.session.delete(chat)
         self.session.flush()
-        self.session.commit()
 
 @component
 class ChatUsersRepo(BaseRepository, interfaces.ChatUsersRepo):
@@ -60,7 +58,6 @@ class MessagesRepo(BaseRepository, interfaces.MessagesRepo):
     def add(self, message: Message):
         self.session.add(message)
         self.session.flush()
-        self.session.commit()
 
     def get_chat_messages(self, chat_id: int) -> List[Message]:
         query = select(Message).where(Message.chat_id == chat_id)
@@ -72,7 +69,6 @@ class UsersRepo(BaseRepository, interfaces.UsersRepo):
     def add(self, user: User) -> User:
         self.session.add(user)
         self.session.flush()
-        self.session.commit()
         self.session.refresh(user)
         return user
 

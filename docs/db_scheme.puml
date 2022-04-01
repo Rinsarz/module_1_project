@@ -4,13 +4,14 @@ header Chat
 title Схема БД
 
 hide circle
-'skinparam linetype ortho
+skinparam linetype ortho
 
 
 
 
 entity chats{
     * **chat_id**: int
+    --
     * **creator_id**: int FK
     **info**: text
 
@@ -19,6 +20,7 @@ entity chats{
 
 entity users{
     * **user_id**: int
+    --
     * **username**: text
     * **password**: text
     * **email**: text
@@ -27,23 +29,25 @@ entity users{
 entity chat_users{
     * **chat_id**: int FK
     * **user_id**: int FK
+    --
     * **status_id**: int FK
     * **changed**: datetime
 }
 
 entity messages{
     * **message_id**: int PK
+    --
     * **user_id**: int FK
     * **chat_id**: int FK
-    message_text: text
-    **created**: text
+    * **message_text**: text
+    * **created**: text
 }
 
 
 chats }o--|| users
-messages }o--|| users
-chat_users }o--|| users
-chats ||--|{ chat_users
+messages }o-|| users
+chat_users }o-|| users
+chats ||-|{ chat_users
 messages }o--||chats
 
 @enduml

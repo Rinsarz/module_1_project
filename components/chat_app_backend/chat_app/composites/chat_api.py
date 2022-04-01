@@ -1,3 +1,4 @@
+import falcon
 from sqlalchemy import create_engine
 from classic.sql_storage import TransactionContext
 from chat_app.application import services
@@ -38,6 +39,7 @@ app = chat_api.create_app(
     chats=Application.chats,
     users=Application.users
     )
+
 
 class Aspects:
     services.join_points.join(DB.context)

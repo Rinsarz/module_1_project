@@ -92,6 +92,7 @@ def test__create_chat_no_args(service):
 def test__create_chat(service,
                       users_repo, chats_repo, chat_users_repo,
                       chat_1, user_1, active_user_1_chat_1):
+
     users_repo.get_by_id.return_value = user_1
     chats_repo.add.return_value = chat_1
     service.create_chat(chat_id=None,
@@ -103,10 +104,14 @@ def test__create_chat(service,
     _, call_kwargs_3 = chat_users_repo.add_participant.call_args
 
     new_chat = call_kwargs_2['chat']
+    new_chat_user = call_kwargs_3['chat_user']
     assert call_kwargs_1 == {'user_id': chat_1.creator_id}
     assert new_chat.creator_id == chat_1.creator_id
     assert new_chat.info == chat_1.info
-    assert call_kwargs_3 == {'chat_user': active_user_1_chat_1}
+    # assert call_kwargs_3 == {'chat_user': active_user_1_chat_1}
+    assert new_chat_user.chat_id == active_user_1_chat_1.chat_id
+    assert new_chat_user.user_id == active_user_1_chat_1.user_id
+    assert new_chat_user.is_active == active_user_1_chat_1.is_active
 
 
 def test__get_chat_no_args(service):
